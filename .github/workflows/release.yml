@@ -1,6 +1,7 @@
 name: packfs release
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - 'v*'
@@ -26,9 +27,9 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: packfs-bin
+          name: packfs-bin 
           path: zig-out/bin/*
-
+          if-no-files-found: error 
   release:
     needs: build
     runs-on: ubuntu-latest
@@ -37,11 +38,12 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: packfs
+          name: packfs-bin 
+      - name: Fix permissions
+        run: chmod +x *
 
       - name: Publish Release
         uses: softprops/action-gh-release@v2
         with:
-          files: "*"
-        env:
+          files: "*" 
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
