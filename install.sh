@@ -15,7 +15,7 @@ fi
 
 echo "Compilando binário packfs..."
 cd "$SCRIPT_DIR"
-zig build -Doptimize=ReleaseFast
+zig build -Doptimize=ReleaseSmall -Dstrip=true
 echo "Binário compilado"
 
 echo "Copiando binário packfs para $DEST_DIR"

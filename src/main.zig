@@ -4,8 +4,10 @@ const print = std.debug.print;
 // internal imports
 const comp = @import("utils/comparators.zig");
 const verifyer = @import("backend/verifyers.zig");
+
 const lister = @import("backend/lister.zig");
 const packer = @import("backend/packer.zig");
+const extracter = @import("backend/extracter.zig");
 
 pub fn main() !void {
     var args = std.process.args();
@@ -15,27 +17,32 @@ pub fn main() !void {
         if (comp.equals(command, "pack")) {
             var dir_path: []const u8 = ".";
             var out_name_pfs: []const u8 = "out";
+            var recursive: bool = false;
 
-            // verifica se o usuario passou o argumento <dir>
-            if (args.next()) |dir_path_input| {
-                if (!verifyer.is_directory(dir_path_input)) {
-                    print("ERRO: O caminho '{s}' precisa ser um diretorio.\n", .{dir_path_input});
+            while (args.next()) |arg| {
+                if (comp.equals_command(arg, &.{ "-r", "--recursive" })) {
+                    recursive = true;
+                } else if (dir_path.ptr == @as([]const u8, ".").ptr) {
+                    // Primeiro argumento não-flag = dir_path
+                    if (!verifyer.is_directory(arg)) {
+                        print("ERRO: O caminho '{s}' precisa ser um diretorio.\n", .{arg});
+                        return;
+                    }
+                    dir_path = arg;
+                } else if (out_name_pfs.ptr == @as([]const u8, "out").ptr) {
+                    // Segundo argumento não-flag = out_name_pfs
+                    if (arg.len == 0) {
+                        print("ERRO: O nome do arquivo.pfs de saida não pode ser vazio.\n", .{});
+                        return;
+                    }
+                    out_name_pfs = arg;
+                } else {
+                    print("ERRO: Argumento inesperado '{s}'.\n", .{arg});
                     return;
                 }
-                dir_path = dir_path_input;
             }
 
-            // verifica se o usuario passou o argumento <out.pfs>
-            if (args.next()) |out_name_pfs_input| {
-                if (out_name_pfs_input.len == 0) {
-                    print("ERRO: O nome do arquivo.pfs de saida '{s}' não pode ser vazio.\n", .{out_name_pfs_input});
-                    return;
-                }
-
-                out_name_pfs = out_name_pfs_input;
-            }
-
-            try packer.pack(dir_path, out_name_pfs);
+            try packer.pack(dir_path, out_name_pfs, recursive);
             return;
         }
 
@@ -73,14 +80,12 @@ pub fn main() !void {
             }
 
             if (args.next()) |out_dir_input| {
-                if (!verifyer.is_directory(out_dir_input)) {
-                    print("ERRO: O caminho '{s}' precisa ser um diretorio.\n", .{out_dir_input});
-                    return;
-                }
-
                 out_dir = out_dir_input;
+
+                try verifyer.ensure_directory(out_dir);
             }
-            // extracter.extract(name_pfs, out_dir);
+
+            try extracter.extract(name_pfs, out_dir);
             return;
         }
 
@@ -90,7 +95,7 @@ pub fn main() !void {
         }
 
         if (comp.equals_command(command, &.{ "-v", "--version" })) {
-            print("packfs - v0.2.0-dev\n", .{});
+            print("packfs - v0.2.1-dev\n", .{});
         }
     }
 }

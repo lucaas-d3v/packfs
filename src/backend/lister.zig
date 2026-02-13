@@ -3,6 +3,7 @@ const print = std.debug.print;
 
 // internal imports
 const comp = @import("../utils/comparators.zig");
+const r = @import("../utils/readers.zig");
 
 pub fn list(pfs_file_path: []const u8) !void {
     const file = try std.fs.cwd().openFile(pfs_file_path, .{ .mode = .read_only });
@@ -19,8 +20,8 @@ pub fn list(pfs_file_path: []const u8) !void {
         return;
     }
 
-    const version = try read_u16_LE(reader);
-    const count = try read_u32_LE(reader);
+    const version = try r.read_u16_LE(reader);
+    const count = try r.read_u32_LE(reader);
 
     print("{d}, {d}\n", .{ version, count });
 
@@ -28,7 +29,7 @@ pub fn list(pfs_file_path: []const u8) !void {
     var buffer: [4096]u8 = undefined;
 
     while (i < count) {
-        const path_len = try read_u16_LE(reader);
+        const path_len = try r.read_u16_LE(reader);
         if (path_len == 0 or path_len >= buffer.len) {
             print("ERRO: path_len inválido ({d})\n", .{path_len});
             return;
@@ -37,23 +38,10 @@ pub fn list(pfs_file_path: []const u8) !void {
         const path_sliced = buffer[0..path_len];
         try reader.readNoEof(path_sliced);
 
-        const size = try read_u64_LE(reader);
-        const offset = try read_u64_LE(reader);
+        const size = try r.read_u64_LE(reader);
+        const offset = try r.read_u64_LE(reader);
 
         print("{s} {d} {d}\n", .{ path_sliced, size, offset });
         i += 1;
     }
-}
-
-// utilitys
-fn read_u16_LE(r: anytype) !u16 {
-    return try r.readInt(u16, .little);
-}
-
-fn read_u32_LE(r: anytype) !u32 {
-    return try r.readInt(u32, .little);
-}
-
-fn read_u64_LE(r: anytype) !u64 {
-    return try r.readInt(u64, .little);
 }
