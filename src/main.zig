@@ -5,6 +5,7 @@ const print = std.debug.print;
 const comp = @import("utils/comparators.zig");
 const verifyer = @import("backend/verifyers.zig");
 const lister = @import("backend/lister.zig");
+const packer = @import("backend/packer.zig");
 
 pub fn main() !void {
     var args = std.process.args();
@@ -34,7 +35,7 @@ pub fn main() !void {
                 out_name_pfs = out_name_pfs_input;
             }
 
-            // packer.pack(dir_path, out_name_pfs);
+            try packer.pack(dir_path, out_name_pfs);
             return;
         }
 
@@ -46,7 +47,7 @@ pub fn main() !void {
                     return;
                 }
 
-                lister.list(file_pfs);
+                try lister.list(file_pfs);
                 return;
             }
 
@@ -89,7 +90,7 @@ pub fn main() !void {
         }
 
         if (comp.equals_command(command, &.{ "-v", "--version" })) {
-            print("packfs - v0.0.1-dev\n", .{});
+            print("packfs - v0.2.0-dev\n", .{});
         }
     }
 }
