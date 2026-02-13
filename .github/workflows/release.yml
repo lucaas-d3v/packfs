@@ -22,7 +22,7 @@ jobs:
           version: 0.13.0
 
       - name: Build Binary
-        run: zig build -Doptimize=ReleaseFast
+        run: zig build -Doptimize=ReleaseSmall -Dstrip=true
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
